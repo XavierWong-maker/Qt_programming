@@ -20,6 +20,7 @@ bool QCalculatorUI::construct(){
         m_edit->move(10,10);
         m_edit->resize(240,30);
         m_edit->setReadOnly(true);
+        m_edit->setAlignment(Qt::AlignRight);
     }else{
         ret = false;
     }
@@ -63,8 +64,24 @@ void QCalculatorUI::show(){
 
 void QCalculatorUI::onButtonClicked(){
     QPushButton* btn = qobject_cast<QPushButton*>(sender());
-    if(btn){
-        qDebug() << btn->text();
+    if(!btn){
+        return;
+    }
+
+    const QString clickText = btn->text();
+    QString currentText = m_edit->text();
+
+    if("<-" == clickText){
+        if(!currentText.isEmpty()){
+            currentText.chop(1);
+            m_edit->setText(currentText);
+        }
+    }else if("C" == clickText){
+        m_edit->clear();
+    }else if("=" == clickText){
+
+    }else{
+        m_edit->setText(currentText.append(clickText));
     }
 }
 
