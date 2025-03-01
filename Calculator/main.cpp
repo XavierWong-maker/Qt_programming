@@ -1,10 +1,11 @@
+#include "QCalculatorDec.h"
 #include "QCalculatorUI.h"
 #include <QWidget>
 #include <QApplication>
 
 int main(int argc, char *argv[])
 {
-    QApplication a(argc, argv);
+    /*QApplication a(argc, argv);
     QCalculatorUI* cal = QCalculatorUI::NewInstance();
     int ret {-1};
 
@@ -14,5 +15,8 @@ int main(int argc, char *argv[])
         delete cal;
     }
 
-    return ret;
+    return ret;*/
+
+    QCalculatorDec c;
+    return 0;
 }
