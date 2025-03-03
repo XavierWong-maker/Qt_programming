@@ -1,11 +1,12 @@
 #ifndef _QCALCULATORDEC_H_
 #define _QCALCULATORDEC_H_
 
+#include "ICalculator.h"
 #include <QString>
 #include <QStack>
 #include <QQueue>
 
-class QCalculatorDec
+class QCalculatorDec:public ICalculator
 {
 protected:
     QString m_exp;
@@ -20,6 +21,10 @@ protected:
     bool isRight(QString s);
     int priority(QString s);
     QQueue<QString> split(const QString& exp);
+    bool match(QQueue<QString>& exp);
+    bool transform(QQueue<QString>& exp, QQueue<QString>& output);
+    QString calculate(QString l, QString op, QString r);
+    QString calculate(QQueue<QString>& exp);
 
 public:
     QCalculatorDec();

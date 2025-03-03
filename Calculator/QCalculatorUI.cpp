@@ -2,7 +2,7 @@
 #include <QDebug>
 
 QCalculatorUI::QCalculatorUI(): QWidget(nullptr,Qt::WindowCloseButtonHint){
-
+    m_cal = nullptr;
 }
 
 bool QCalculatorUI::construct(){
@@ -79,9 +79,17 @@ void QCalculatorUI::onButtonClicked(){
     }else if("C" == clickText){
         m_edit->clear();
     }else if("=" == clickText){
-
+        m_cal->expression(m_edit->text());
+        m_edit->setText(m_cal->result());
     }else{
         m_edit->setText(currentText.append(clickText));
     }
+}
+
+void QCalculatorUI::setCalculator(ICalculator* cal){
+    m_cal = cal;
+}
+ICalculator* QCalculatorUI::getCalculator(){
+    return m_cal;
 }
 
