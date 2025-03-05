@@ -9,9 +9,11 @@ class Widget : public QWidget
     Q_OBJECT
 private:
     QPushButton TestBtn;
+    QPushButton PrintBtn;
 
 private slots:
     void TestBtn_Clicked();
+    void PrintBtn_clicked();
 
 public:
     Widget(QWidget *parent = nullptr);
