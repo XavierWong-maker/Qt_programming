@@ -14,6 +14,7 @@ private:
 private slots:
     void TestBtn_Clicked();
     void PrintBtn_clicked();
+    void timer();
 
 public:
     Widget(QWidget *parent = nullptr);

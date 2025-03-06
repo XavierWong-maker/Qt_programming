@@ -2,19 +2,24 @@
 #include "QLogindialog.h"
 #include <QPrintDialog>
 #include <QDebug>
-#include <QVBoxLayout>
+#include <QStackedLayout>
+#include <QtCore>
 
 Widget::Widget(QWidget *parent)
     : QWidget(parent), TestBtn(this), PrintBtn(this){
 
-    QVBoxLayout* layout = new QVBoxLayout(this);
+    QStackedLayout* sLayout = new QStackedLayout(this);
     TestBtn.setText("Test Login Dialog");
     PrintBtn.setText("Progress Dialog");
 
-    layout->addWidget(&TestBtn);
-    layout->addWidget(&PrintBtn);
+    sLayout->addWidget(&TestBtn);
+    sLayout->addWidget(&PrintBtn);
+    sLayout->setCurrentIndex(0);
+    setLayout(sLayout);
 
-    setLayout(layout);
+    QTimer *timer = new QTimer(this);
+    connect(timer, &QTimer::timeout, this, &Widget::timer);
+    timer->start(2000);
 
     connect(&TestBtn, &QPushButton::clicked, this, &Widget::TestBtn_Clicked);
     connect(&PrintBtn, &QPushButton::clicked, this, &Widget::PrintBtn_clicked);
@@ -33,6 +38,14 @@ void Widget::PrintBtn_clicked(){
 
     prdialog.setWindowTitle("Setting the Printer");
     prdialog.exec();
+}
+
+void Widget::timer(){
+    QStackedLayout* sLayout = qobject_cast<QStackedLayout*>(layout());
+    if(!sLayout || sLayout->count() < 2){
+        return;
+    }
+    sLayout->setCurrentIndex(!sLayout->currentIndex());
 }
 
 Widget::~Widget() {}
