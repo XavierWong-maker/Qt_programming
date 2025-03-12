@@ -7,7 +7,11 @@
 #include <QStatusBar>
 #include <QLabel>
 
-MainWindow::MainWindow(){}
+MainWindow::MainWindow():statusLbl(this){
+    m_filePath = "";
+    m_isTextChanged = false;
+    setWindowTitle("NotePad-[New]");
+}
 
 MainWindow* MainWindow::NewInstance(){
 
@@ -64,7 +68,7 @@ bool MainWindow::initStatusBar() {
         return false;
     }
 
-    QLabel* label = new QLabel("W.Software", this);
+    QLabel* label = new QLabel("X.Software", this);
     if (!label) {
         return false;
     }
@@ -87,6 +91,7 @@ bool MainWindow::initMainEditor() {
 
     mainEditor.setParent(this);
     setCentralWidget(&mainEditor);
+    connect(&mainEditor,&QPlainTextEdit::textChanged, this, &MainWindow::onTextChanged);
     return true;
 }
 
@@ -102,24 +107,28 @@ bool MainWindow::initFileMenu(QMenuBar* mb){
         delete fileMenu;
         return false;
     }
+    connect(action, &QAction::triggered, this ,&MainWindow::onFileNew);
     fileMenu->addAction(action);
 
     if(!makeAction(action, "&Open...", QKeySequence(QKeyCombination(Qt::CTRL, Qt::Key_O)))){
         delete fileMenu;
         return false;
     }
+    connect(action, &QAction::triggered, this, &MainWindow::onFileOpen);
     fileMenu->addAction(action);
 
     if(!makeAction(action, "&Save", QKeySequence(QKeyCombination(Qt::CTRL, Qt::Key_S)))){
         delete fileMenu;
         return false;
     }
+    connect(action, &QAction::triggered, this, &MainWindow::onFileSave);
     fileMenu->addAction(action);
 
     if(!makeAction(action, "Save &As...", QKeySequence(QKeyCombination()))){
         delete fileMenu;
         return false;
     }
+    connect(action, &QAction::triggered, this, &MainWindow::onFileSaveAs);
     fileMenu->addAction(action);
     fileMenu->addSeparator();
 
@@ -296,21 +305,25 @@ bool MainWindow::initFileToolItem(QToolBar* tb) {
     if (!makeAction(action, "New", ":/Res/pic/new.png")) {
         return false;
     }
+    connect(action, &QAction::triggered, this, &MainWindow::onFileNew);
     tb->addAction(action);
 
     if (!makeAction(action, "Open", ":/Res/pic/open.png")) {
         return false;
     }
+    connect(action, &QAction::triggered, this, &MainWindow::onFileOpen);
     tb->addAction(action);
 
     if (!makeAction(action, "Save", ":/Res/pic/save.png")) {
         return false;
     }
+    connect(action, &QAction::triggered, this, &MainWindow::onFileSave);
     tb->addAction(action);
 
     if (!makeAction(action, "Save As", ":/Res/pic/saveas.png")) {
         return false;
     }
+    connect(action, &QAction::triggered, this, &MainWindow::onFileSaveAs);
     tb->addAction(action);
 
     if (!makeAction(action, "Print", ":/Res/pic/print.png")) {
