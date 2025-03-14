@@ -11,6 +11,7 @@ MainWindow::MainWindow():statusLbl(this){
     m_filePath = "";
     m_isTextChanged = false;
     setWindowTitle("NotePad-[New]");
+    mainEditor.setAcceptDrops(false);
 }
 
 MainWindow* MainWindow::NewInstance(){

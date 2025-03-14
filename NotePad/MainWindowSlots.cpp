@@ -4,16 +4,32 @@
 #include <QFile>
 #include <QDebug>
 #include <QMessageBox>
+#include <QMap>
+#include <QDropEvent>
+#include <QMimeData>
+#include <QFileInfo>
+#include <QList>
+#include <QUrl>
 
 QString MainWindow::showFileDialog(QFileDialog::AcceptMode mode, QString title){
     QString ret = "";
     QFileDialog fd;
+    QStringList filters;
+    QMap<QString, QString> map;
+    const char* fileArray[][2] =
+    {
+        {"Text(*.txt)",    ".txt"},
+        {"All Files(*.*)",   "*" },
+        {NULL,               NULL}
+    };
+
+    for(int i {0}; fileArray[i][0] != NULL; ++i){
+        filters.append(fileArray[i][0]);
+        map.insert(fileArray[i][0], fileArray[i][1]);
+    }
 
     fd.setWindowTitle(title);
     fd.setAcceptMode(mode);
-    QStringList filters;
-    filters.append("Text(*.txt)");
-    filters.append("All Files(*.*)");
     fd.setNameFilters(filters);
 
     if(mode == QFileDialog::AcceptOpen){
@@ -22,6 +38,11 @@ QString MainWindow::showFileDialog(QFileDialog::AcceptMode mode, QString title){
 
     if(fd.exec() == QFileDialog::Accepted){
         ret = fd.selectedFiles()[0];
+        QString posix = map[fd.selectedNameFilter()];
+
+        if("*" != posix && !ret.endsWith(posix)){
+            ret += posix;
+        }
     }
 
     return ret;
@@ -85,21 +106,26 @@ void MainWindow::preEditorChanged(){
     }
 }
 
+void MainWindow::openFileToEdit(QString path){
+    if (!path.isEmpty()) {
+        QFile file(path);
+        if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            mainEditor.setPlainText(QString(file.readAll()));
+            file.close();
+            m_filePath = path;
+            m_isTextChanged = false;
+            setWindowTitle("NotePad - [" + m_filePath + "]");
+        } else {
+            showErrorMessage(QString("Open file Error!\n\n") + "\"" + path + "\"");
+        }
+    }
+}
+
 void MainWindow::onFileOpen(){
     preEditorChanged();
     if(!m_isTextChanged){
         QString path = showFileDialog(QFileDialog::AcceptOpen, "open");
-        if("" != path){
-            QFile file(path);
-            if(file.open(QIODevice::ReadOnly | QIODevice::Text)){
-                mainEditor.setPlainText(QString(file.readAll()));
-                file.close();
-                m_filePath = path;
-                setWindowTitle("NotePad - [" + m_filePath + "]");
-            }else {
-                showErrorMessage(QString("Open file Error!\n\n") + "\"" + m_filePath + "\"");
-            }
-        }
+        openFileToEdit(path);
     }
 }
 
@@ -133,3 +159,44 @@ void MainWindow::onTextChanged(){
     }
     m_isTextChanged = true;
 }
+
+void MainWindow::closeEvent(QCloseEvent *e){
+    preEditorChanged();
+    if(!m_isTextChanged){
+        QMainWindow::closeEvent(e);
+    }else{
+        e->ignore();
+    }
+}
+
+void MainWindow::dragEnterEvent(QDragEnterEvent* e){
+    if(e->mimeData()->hasUrls()){
+        e->acceptProposedAction();
+    }else{
+        e->ignore();
+    }
+}
+
+void MainWindow::dropEvent(QDropEvent* e){
+    if(e->mimeData()->hasUrls()){
+        QList<QUrl> list = e->mimeData()->urls();
+        QString path = list[0].toLocalFile();
+        QFileInfo fi(path);
+
+        if(fi.isFile()){
+            preEditorChanged();
+
+            if(!m_isTextChanged){
+                openFileToEdit(path);
+            }
+            e->accept();
+        }else{
+            showErrorMessage("Canot open a folder");
+            e->accept();
+        }
+
+    }else{
+        e->ignore();
+    }
+}
+

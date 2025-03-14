@@ -49,6 +49,7 @@ class MainWindow : public QMainWindow
     int showQuesstionMessage(QString message);
     QString saveCurrentData(QString path = "");
     void preEditorChanged();
+    void openFileToEdit(QString path);
 
 private slots:
     void onFileNew();
@@ -57,6 +58,10 @@ private slots:
     void onFileSaveAs();
     void onTextChanged();
 
+protected:
+    void closeEvent(QCloseEvent* e);
+    void dragEnterEvent(QDragEnterEvent* e);
+    void dropEvent(QDropEvent* e);
 public:
     static MainWindow* NewInstance();
     ~MainWindow();
