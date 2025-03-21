@@ -7,7 +7,11 @@
 #include <QStatusBar>
 #include <QLabel>
 
-MainWindow::MainWindow():statusLbl(this){
+MainWindow::MainWindow() :
+    statusLbl(this),
+    m_FindDlg(new FindDialog(this, &mainEditor)),
+    m_ReplaceDlg(new ReplacDialog(this, &mainEditor)){
+
     m_filePath = "";
     m_isTextChanged = false;
     setWindowTitle("NotePad-[New]");
@@ -93,6 +97,10 @@ bool MainWindow::initMainEditor() {
     mainEditor.setParent(this);
     setCentralWidget(&mainEditor);
     connect(&mainEditor,&QPlainTextEdit::textChanged, this, &MainWindow::onTextChanged);
+    connect(&mainEditor, &QPlainTextEdit::copyAvailable, this, &MainWindow::onCopyAvailable);
+    connect(&mainEditor, &QPlainTextEdit::undoAvailable, this, &MainWindow::onUndoAvailable);
+    connect(&mainEditor, &QPlainTextEdit::redoAvailable, this, &MainWindow::onRedoAvailable);
+    connect(&mainEditor, &QPlainTextEdit::cursorPositionChanged, this, &MainWindow::onCursorPositionChanged);
     return true;
 }
 
@@ -144,6 +152,7 @@ bool MainWindow::initFileMenu(QMenuBar* mb){
         delete fileMenu;
         return false;
     }
+    connect(action, &QAction::triggered, this, &MainWindow::onEditExit);
     fileMenu->addAction(action);
 
     mb->addMenu(fileMenu);
@@ -162,12 +171,16 @@ bool MainWindow::initEditMenu(QMenuBar* mb) {
         delete editMenu;
         return false;
     }
+    connect(action, &QAction::triggered, &mainEditor, &QPlainTextEdit::undo);
+    action->setEnabled(false);
     editMenu->addAction(action);
 
     if (!makeAction(action, "&Redo...", QKeySequence(QKeyCombination(Qt::CTRL, Qt::Key_Y)))) {
         delete editMenu;
         return false;
     }
+    connect(action, &QAction::triggered, &mainEditor, &QPlainTextEdit::redo);
+    action->setEnabled(false);
     editMenu->addAction(action);
     editMenu->addSeparator();
 
@@ -175,24 +188,30 @@ bool MainWindow::initEditMenu(QMenuBar* mb) {
         delete editMenu;
         return false;
     }
+    connect(action, &QAction::triggered, &mainEditor, &QPlainTextEdit::cut);
+    action->setEnabled(false);
     editMenu->addAction(action);
 
     if (!makeAction(action, "&Copy...", QKeySequence(QKeyCombination(Qt::CTRL, Qt::Key_C)))) {
         delete editMenu;
         return false;
     }
+    connect(action, &QAction::triggered, &mainEditor, &QPlainTextEdit::copy);
+    action->setEnabled(false);
     editMenu->addAction(action);
 
     if (!makeAction(action, "&Paste...", QKeySequence(QKeyCombination(Qt::CTRL, Qt::Key_V)))) {
         delete editMenu;
         return false;
     }
+    connect(action, &QAction::triggered, &mainEditor, &QPlainTextEdit::paste);
     editMenu->addAction(action);
 
     if (!makeAction(action, "De&lete", QKeySequence(Qt::Key_Delete))) {
         delete editMenu;
         return false;
     }
+    connect(action, &QAction::triggered, this, &MainWindow::onEditDelete);
     editMenu->addAction(action);
     editMenu->addSeparator();
 
@@ -200,18 +219,21 @@ bool MainWindow::initEditMenu(QMenuBar* mb) {
         delete editMenu;
         return false;
     }
+    connect(action, &QAction::triggered, this, &MainWindow::onEditFind);
     editMenu->addAction(action);
 
     if (!makeAction(action, "&Replace...", QKeySequence(QKeyCombination(Qt::CTRL, Qt::Key_H)))) {
         delete editMenu;
         return false;
     }
+    connect(action, &QAction::triggered, this, &MainWindow::onEditReplce);
     editMenu->addAction(action);
 
     if (!makeAction(action, "&Goto...", QKeySequence(QKeyCombination(Qt::CTRL, Qt::Key_G)))) {
         delete editMenu;
         return false;
     }
+    connect(action, &QAction::triggered, this, &MainWindow::onEditGoto);
     editMenu->addAction(action);
     editMenu->addSeparator();
 
@@ -219,6 +241,7 @@ bool MainWindow::initEditMenu(QMenuBar* mb) {
         delete editMenu;
         return false;
     }
+    connect(action, &QAction::triggered, &mainEditor, &QPlainTextEdit::selectAll);
     editMenu->addAction(action);
 
     mb->addMenu(editMenu);
@@ -257,16 +280,22 @@ bool MainWindow::initViewMenu(QMenuBar* mb) {
     auto viewMenu = new QMenu("&View", mb);
     QAction* action = nullptr;
 
-    if (!makeAction(action, "&Tool Bar", QKeySequence())) {
+    if (!makeAction(action, "Tool Bar", QKeySequence())) {
         delete viewMenu;
         return false;
     }
+    action->setCheckable(true);
+    action->setChecked(true);
+    connect(action, &QAction::triggered, this, &MainWindow::onViewToolBar);
     viewMenu->addAction(action);
 
-    if (!makeAction(action, "&Status Bar", QKeySequence())) {
+    if (!makeAction(action, "Status Bar", QKeySequence())) {
         delete viewMenu;
         return false;
     }
+    action->setCheckable(true);
+    action->setChecked(true);
+    connect(action, &QAction::triggered, this, &MainWindow::onViewStatusBar);
     viewMenu->addAction(action);
 
     mb->addMenu(viewMenu);
@@ -344,31 +373,41 @@ bool MainWindow::initEditToolItem(QToolBar* tb) {
     if (!makeAction(action, "Undo", ":/Res/pic/undo.png")) {
         return false;
     }
+    action->setEnabled(false);
+    connect(action, &QAction::triggered, &mainEditor, &QPlainTextEdit::undo);
     tb->addAction(action);
 
     if (!makeAction(action, "Redo", ":/Res/pic/redo.png")) {
         return false;
     }
+    action->setEnabled(false);
+    connect(action, &QAction::triggered, &mainEditor, &QPlainTextEdit::redo);
     tb->addAction(action);
 
     if (!makeAction(action, "Cut", ":/Res/pic/cut.png")) {
         return false;
     }
+    action->setEnabled(false);
+    connect(action, &QAction::triggered, &mainEditor, &QPlainTextEdit::cut);
     tb->addAction(action);
 
     if (!makeAction(action, "Copy", ":/Res/pic/copy.png")) {
         return false;
     }
+    action->setEnabled(false);
+    connect(action, &QAction::triggered, &mainEditor, &QPlainTextEdit::copy);
     tb->addAction(action);
 
     if (!makeAction(action, "Paste", ":/Res/pic/paste.png")) {
         return false;
     }
+    connect(action, &QAction::triggered, &mainEditor, &QPlainTextEdit::paste);
     tb->addAction(action);
 
     if (!makeAction(action, "Find", ":/Res/pic/find.png")) {
         return false;
     }
+    connect(action, &QAction::triggered, this, &MainWindow::onEditFind);
     tb->addAction(action);
 
     if (!makeAction(action, "Replace", ":/Res/pic/replace.png")) {
@@ -379,6 +418,7 @@ bool MainWindow::initEditToolItem(QToolBar* tb) {
     if (!makeAction(action, "Goto", ":/Res/pic/goto.png")) {
         return false;
     }
+    connect(action, &QAction::triggered, this, &MainWindow::onEditGoto);
     tb->addAction(action);
 
     return true;
@@ -412,11 +452,17 @@ bool MainWindow::initViewToolItem(QToolBar* tb) {
     if (!makeAction(action, "Tool Bar", ":/Res/pic/tool.png")) {
         return false;
     }
+    action->setCheckable(true);
+    action->setChecked(true);
+    connect(action, &QAction::triggered, this, &MainWindow::onViewToolBar);
     tb->addAction(action);
 
     if (!makeAction(action, "Status Bar", ":/Res/pic/status.png")) {
         return false;
     }
+    action->setCheckable(true);
+    action->setChecked(true);
+    connect(action, &QAction::triggered, this, &MainWindow::onViewStatusBar);
     tb->addAction(action);
 
     return true;

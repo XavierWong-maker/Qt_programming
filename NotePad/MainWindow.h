@@ -10,6 +10,9 @@
 #include <QLabel>
 #include <QString>
 #include <QFileDialog>
+#include "FindDialog.h"
+#include "ReplacDialog.h"
+#include <QSharedPointer>
 
 class MainWindow : public QMainWindow
 {
@@ -19,6 +22,8 @@ class MainWindow : public QMainWindow
     QLabel statusLbl;
     QString m_filePath;
     bool m_isTextChanged;
+    QSharedPointer<FindDialog> m_FindDlg;
+    QSharedPointer<ReplacDialog> m_ReplaceDlg;
 
     MainWindow();
     MainWindow(const MainWindow&);
@@ -50,13 +55,27 @@ class MainWindow : public QMainWindow
     QString saveCurrentData(QString path = "");
     void preEditorChanged();
     void openFileToEdit(QString path);
+    QAction* findMenuBarAction(QString text);
+    QAction* findToolBarAction(QString text);
+    void updateActionState(const QString& actionText, bool checked);
 
 private slots:
     void onFileNew();
     void onFileOpen();
     void onFileSave();
     void onFileSaveAs();
+    void onEditDelete();
+    void onEditFind();
+    void onEditReplce();
+    void onEditGoto();
+    void onEditExit();
+    void onViewStatusBar();
+    void onViewToolBar();
     void onTextChanged();
+    void onCopyAvailable(bool available);
+    void onUndoAvailable(bool available);
+    void onRedoAvailable(bool available);
+    void onCursorPositionChanged();
 
 protected:
     void closeEvent(QCloseEvent* e);
