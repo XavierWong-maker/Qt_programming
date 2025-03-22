@@ -320,6 +320,7 @@ bool MainWindow::initHelpMenu(QMenuBar* mb) {
         delete helpMenu;
         return false;
     }
+    connect(action, &QAction::triggered, this, &MainWindow::onHelpAbout);
     helpMenu->addAction(action);
 
     mb->addMenu(helpMenu);

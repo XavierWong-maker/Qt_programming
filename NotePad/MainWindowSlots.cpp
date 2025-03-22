@@ -1,4 +1,5 @@
 #include "MainWindow.h"
+#include "AboutDialog.h"
 #include <QApplication>
 #include <QFileDialog>
 #include <QStringList>
@@ -237,6 +238,10 @@ void MainWindow::onEditGoto(){
 
 void MainWindow::onEditExit(){
     close();
+}
+
+void MainWindow::onHelpAbout(){
+    AboutDialog(this).exec();
 }
 
 void MainWindow::onViewStatusBar(){

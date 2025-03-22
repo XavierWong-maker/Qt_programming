@@ -69,6 +69,7 @@ private slots:
     void onEditReplce();
     void onEditGoto();
     void onEditExit();
+    void onHelpAbout();
     void onViewStatusBar();
     void onViewToolBar();
     void onTextChanged();

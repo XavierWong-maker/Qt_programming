@@ -17,5 +17,6 @@
         <file>pic/tool.png</file>
         <file>pic/undo.png</file>
         <file>pic/wrap.png</file>
+        <file>pic/Logo.png</file>
     </qresource>
 </RCC>
