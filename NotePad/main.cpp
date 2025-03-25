@@ -7,7 +7,13 @@ int main(int argc, char *argv[])
     auto w = MainWindow::NewInstance();
     int ret = -1;
     if( w != NULL ){
-        w->resize(800, 600);
+        if(argc > 1){
+            QFileInfo fi(argv[1]);
+            if(fi.exists()){
+                w->openFile(fi.absoluteFilePath());
+            }
+        }
+
         w->show();
         ret = a.exec();
     }

@@ -6,6 +6,7 @@
 #include <QSize>
 #include <QStatusBar>
 #include <QLabel>
+#include "AppConfig.h"
 
 MainWindow::MainWindow() :
     statusLbl(this),
@@ -30,11 +31,34 @@ MainWindow* MainWindow::NewInstance(){
 
 bool MainWindow::construct(){
     bool ret = true;
+    AppConfig config;
+
     ret = ret && initMenuBar();
     ret = ret && initToolBar();
     ret = ret && initStatusBar();
     ret = ret && initMainEditor();
 
+    if(config.isValid()){
+        mainEditor.setFont(config.editFont());
+
+        if(!config.isAutoWrap()){
+            mainEditor.setLineWrapMode(QPlainTextEdit::NoWrap);
+            findMenuBarAction("Auto Wrap")->setChecked(false);
+            findToolBarAction("Auto Wrap")->setChecked(false);
+        }
+
+        if(!config.isToolBarVisible()){
+            toolBar()->setVisible(false);
+            findMenuBarAction("Tool Bar")->setChecked(false);
+            findToolBarAction("Tool Bar")->setChecked(false);
+        }
+
+        if(!config.isStatusBarVisible()){
+            statusBar()->setVisible(false);
+            findMenuBarAction("Status Bar")->setChecked(false);
+            findToolBarAction("Status Bar")->setChecked(false);
+        }
+    }
     return ret;
 }
 
@@ -256,16 +280,20 @@ bool MainWindow::initFormatMenu(QMenuBar* mb) {
     auto formatMenu = new QMenu("F&ormat", mb);
     QAction* action = nullptr;
 
-    if (!makeAction(action, "Auto &Wrap", QKeySequence())) {
+    if (!makeAction(action, "Auto Wrap", QKeySequence())) {
         delete formatMenu;
         return false;
     }
+    action->setCheckable(true);
+    action->setChecked(true);
+    connect(action, &QAction::triggered, this, &MainWindow::onFormatWrap);
     formatMenu->addAction(action);
 
     if (!makeAction(action, "&Font...", QKeySequence())) {
         delete formatMenu;
         return false;
     }
+    connect(action, &QAction::triggered, this, &MainWindow::onFontDialog);
     formatMenu->addAction(action);
 
     mb->addMenu(formatMenu);
@@ -314,6 +342,7 @@ bool MainWindow::initHelpMenu(QMenuBar* mb) {
         delete helpMenu;
         return false;
     }
+    connect(action, &QAction::triggered, this, &MainWindow::onFindHelp);
     helpMenu->addAction(action);
 
     if (!makeAction(action, "About NotePad...", QKeySequence())) {
@@ -434,11 +463,13 @@ bool MainWindow::initFormatToolItem(QToolBar* tb) {
     if (!makeAction(action, "Auto Wrap", ":/Res/pic/wrap.png")) {
         return false;
     }
+    connect(action, &QAction::triggered, this, &MainWindow::onFormatWrap);
     tb->addAction(action);
 
     if (!makeAction(action, "Font", ":/Res/pic/font.png")) {
         return false;
     }
+    connect(action, &QAction::triggered, this, &MainWindow::onFontDialog);
     tb->addAction(action);
 
     return true;
@@ -488,6 +519,15 @@ bool MainWindow::makeAction(QAction* &action, const QString tip, const QString i
     action->setToolTip(tip);
     action->setIcon(QIcon(icon));
     return true;
+}
+
+QToolBar* MainWindow::toolBar(){
+    for(QObject* obj : children()){
+        if(auto tb = qobject_cast<QToolBar*>(obj)){
+            return tb;
+        }
+    }
+    return nullptr;
 }
 
 MainWindow::~MainWindow() {}

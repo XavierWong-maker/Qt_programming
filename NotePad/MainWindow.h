@@ -68,7 +68,10 @@ private slots:
     void onEditFind();
     void onEditReplce();
     void onEditGoto();
+    void onFontDialog();
+    void onFormatWrap();
     void onEditExit();
+    void onFindHelp();
     void onHelpAbout();
     void onViewStatusBar();
     void onViewToolBar();
@@ -79,11 +82,15 @@ private slots:
     void onCursorPositionChanged();
 
 protected:
+    void showEvent(QShowEvent *event);
     void closeEvent(QCloseEvent* e);
     void dragEnterEvent(QDragEnterEvent* e);
     void dropEvent(QDropEvent* e);
+
 public:
     static MainWindow* NewInstance();
+    QToolBar* toolBar();
+    void openFile(QString path);
     ~MainWindow();
 };
 #endif // MAINWINDOW_H

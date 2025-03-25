@@ -1,3 +1,4 @@
+#include "AppConfig.h"
 #include "MainWindow.h"
 #include "AboutDialog.h"
 #include <QApplication>
@@ -12,6 +13,8 @@
 #include <QInputDialog>
 #include <QTextBlock>
 #include <QStatusBar>
+#include <QFontDialog>
+#include <QDesktopServices>
 
 
 QString MainWindow::showFileDialog(QFileDialog::AcceptMode mode, QString title){
@@ -109,6 +112,19 @@ void MainWindow::preEditorChanged(){
     }
 }
 
+QAction* MainWindow::findToolBarAction(QString text){
+    QToolBar* tb = toolBar();
+    if(!tb){
+        return nullptr;
+    }
+        for(QAction* action : tb->actions()){
+            if(action && action->toolTip().startsWith(text, Qt::CaseInsensitive)){
+                return action;
+                }
+            }
+    return nullptr;
+}
+
 QAction* MainWindow::findMenuBarAction(QString text){
     for(const QObject* obj : menuBar()->children()){
         if(const auto menu = qobject_cast<const QMenu*>(obj)){
@@ -116,21 +132,6 @@ QAction* MainWindow::findMenuBarAction(QString text){
             const QList<QAction*> actions = menu->actions();
             for(const QAction* action : actions){
                 if(action->text().startsWith(text, Qt::CaseInsensitive)){
-                    return const_cast<QAction*>(action);
-                }
-            }
-        }
-    }
-    return nullptr;
-}
-
-QAction* MainWindow::findToolBarAction(QString text){
-    for(const QObject* obj : children()){
-        if(const auto tb = qobject_cast<const QToolBar*>(obj)){
-
-            const QList<QAction*> actions = tb->actions();
-            for(const QAction* action : actions){
-                if(action->toolTip().startsWith(text, Qt::CaseInsensitive)){
                     return const_cast<QAction*>(action);
                 }
             }
@@ -236,8 +237,38 @@ void MainWindow::onEditGoto(){
     }
 }
 
+void MainWindow::onFontDialog(){
+    QFontDialog fontDialog(mainEditor.font(), this);
+    fontDialog.setWindowTitle("Select Font");
+    fontDialog.setOption(QFontDialog::DontUseNativeDialog, false);
+
+    connect(&fontDialog, &QFontDialog::currentFontChanged, &mainEditor, &QPlainTextEdit::setFont);
+
+    if(fontDialog.exec() == QDialog::Accepted){
+        mainEditor.setFont(fontDialog.selectedFont());
+    }
+}
+
+void MainWindow::onFormatWrap(){
+    QPlainTextEdit::LineWrapMode mode = mainEditor.lineWrapMode();
+
+    if(QPlainTextEdit::NoWrap == mode){
+        mainEditor.setLineWrapMode(QPlainTextEdit::WidgetWidth);
+        findToolBarAction("Auto Wrap")->setChecked(true);
+
+    }else{
+        mainEditor.setLineWrapMode(QPlainTextEdit::NoWrap);
+        findToolBarAction("Auto Wrap")->setChecked(false);
+
+    }
+}
+
 void MainWindow::onEditExit(){
     close();
+}
+
+void MainWindow::onFindHelp(){
+    QDesktopServices::openUrl(QUrl("http://www.google.com"));
 }
 
 void MainWindow::onHelpAbout(){
@@ -253,12 +284,12 @@ void MainWindow::onViewStatusBar(){
     status->setVisible(newVisible);
     updateActionState("Status Bar",newVisible);
 }
+
 void MainWindow::onViewToolBar(){
-    auto toolbars = findChildren<QToolBar*>();
-    if(toolbars.isEmpty()){
+    QToolBar* toolbar = toolBar();
+    if(!toolbar){
         return;
     }
-    QToolBar* toolbar = toolbars.first();
     bool newVisible = !toolbar->isVisible();
     toolbar->setVisible(newVisible);
     updateActionState("Tool Bar", newVisible);
@@ -321,10 +352,28 @@ void MainWindow::onCursorPositionChanged(){
                           .arg(colum+1));
 }
 
+void MainWindow::showEvent(QShowEvent *event){
+    QMainWindow::showEvent(event);
+    AppConfig config;
+    if (config.isValid()) {
+        resize(config.mainWindowSize());
+        move(config.mainWindowPoint());
+    }
+}
+
 void MainWindow::closeEvent(QCloseEvent *e){
     preEditorChanged();
+
     if(!m_isTextChanged){
+        QFont font = mainEditor.font();
+        bool isWrap = (mainEditor.lineWrapMode() == QPlainTextEdit::WidgetWidth);
+        bool tbVisible = toolBar()->isVisible();
+        bool sbVisible = statusBar()->isVisible();
+
+        AppConfig config(font, tbVisible, sbVisible, isWrap, size(), pos());
+        config.store();
         QMainWindow::closeEvent(e);
+
     }else{
         e->ignore();
     }
@@ -360,3 +409,9 @@ void MainWindow::dropEvent(QDropEvent* e){
     }
 }
 
+void MainWindow::openFile(QString path){
+    preEditorChanged();
+    if(!m_isTextChanged){
+        openFileToEdit(path);
+    }
+}
