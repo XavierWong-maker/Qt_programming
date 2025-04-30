@@ -11,7 +11,6 @@ int main(int argc, char *argv[])
 
     TestThread t;
     MyObject obj;
-    QObject::connect(&t, &TestThread::started, &obj, &MyObject::startslot);
     QObject::connect(&t, &TestThread::testsignal, &obj, &MyObject::testSlot);
 
     obj.moveToThread(&t);

@@ -10,7 +10,6 @@ public:
     explicit MyObject(QObject *parent = nullptr);
 
 public slots:
-    void startslot();
     void testSlot();
 };
 
