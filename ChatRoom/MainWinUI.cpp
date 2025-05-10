@@ -5,6 +5,7 @@ MainWin::MainWin(QWidget *parent)
 {
     QWidget* centralWidget = new QWidget(this);
 
+    initMember();
     initMsgGrpBx();
     initInputGrpBx();
     connectSlot();
@@ -59,4 +60,15 @@ void MainWin::initInputGrpBx(){
     inputGrpBx.setTitle("user name");
 }
 
-MainWin::~MainWin() {}
+void MainWin::setCtrlEnabled(bool enabled)
+{
+    inputEdit.setEnabled(enabled);
+    statusLab.setText(enabled ? "Status: Connection successful" : "Status: Not logged in");
+    logInOutBtn.setText(enabled ? "Exit" : "Login");
+    sendBtn.setEnabled(enabled);
+
+    if(!enabled){
+        msgEditor.clear();
+    }
+}
+
