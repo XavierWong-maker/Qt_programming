@@ -8,6 +8,7 @@ MainWin::MainWin(QWidget *parent)
     initMember();
     initMsgGrpBx();
     initInputGrpBx();
+    initListWidgetMenu();
     connectSlot();
 
     vMainLayout.setSpacing(10);
@@ -26,14 +27,20 @@ MainWin::MainWin(QWidget *parent)
 void MainWin::connectSlot(){
     connect(&logInOutBtn, &QPushButton::clicked, this, &MainWin::logInOutBtnClicked);
     connect(&sendBtn, &QPushButton::clicked, this, &MainWin::sendBtnClicked);
+    connect(&listWidget, &QListWidget::customContextMenuRequested, this, &MainWin::listWidgetContextMenu);
 }
 
 void MainWin::initMsgGrpBx(){
     QHBoxLayout* hbl = new QHBoxLayout();
     hbl->setContentsMargins(2,5,2,2);
-    hbl->addWidget(&msgEditor);
+    hbl->addWidget(&msgEditor, 7);
+    hbl->addWidget(&listWidget, 3);
 
     msgEditor.setReadOnly(true);
+    msgEditor.setFocusPolicy(Qt::NoFocus);
+    listWidget.setFocusPolicy(Qt::NoFocus);
+    listWidget.setContextMenuPolicy(Qt::CustomContextMenu);
+
     msgGrpBx.setLayout(hbl);
     msgGrpBx.setTitle("message");
 }
@@ -60,6 +67,24 @@ void MainWin::initInputGrpBx(){
     inputGrpBx.setTitle("user name");
 }
 
+void MainWin::initListWidgetMenu(){
+    const QList<QPair<QString, QString>> actions = {
+        {QStringLiteral("banned to post"), QStringLiteral("silent")},
+        {QStringLiteral("Resume speaking"), QStringLiteral("recover")},
+        {QStringLiteral("kick the account"), QStringLiteral("kick")}
+    };
+
+    for(int i = 0; i < actions.size(); ++i){
+        if(i == 2){
+            listWidgetMenu.addSeparator();
+        }
+        auto action = listWidgetMenu.addAction(actions[i].first);
+        if(action){
+            action->setObjectName(actions[i].second);
+        }
+    }
+}
+
 void MainWin::setCtrlEnabled(bool enabled)
 {
     inputEdit.setEnabled(enabled);
@@ -67,8 +92,13 @@ void MainWin::setCtrlEnabled(bool enabled)
     logInOutBtn.setText(enabled ? "Exit" : "Login");
     sendBtn.setEnabled(enabled);
 
-    if(!enabled){
+    if(enabled){
+        inputEdit.setFocus();
+
+    }else{
         msgEditor.clear();
+        listWidget.clear();
+        inputEdit.clear();
     }
 }
 
