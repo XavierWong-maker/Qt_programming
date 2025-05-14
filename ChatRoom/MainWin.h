@@ -45,6 +45,7 @@ class MainWin : public QMainWindow, public TxtMsgHandler
     void connectSlot();
     void setCtrlEnabled(bool enabled);
     QString getCheckedUserId() const;
+    bool eventFilter(QObject* obj, QEvent* evt) override;
 
     void CONN_Handler(QTcpSocket&, TextMessage&);
     void DSCN_Handler(QTcpSocket&, TextMessage&);

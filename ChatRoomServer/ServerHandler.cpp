@@ -51,14 +51,22 @@ void ServerHandler::sendToAllOnlineUser(TextMessage& message){
 void ServerHandler::CONN_Handler(QTcpSocket&, TextMessage&){}
 
 void ServerHandler::DSCN_Handler(QTcpSocket& socket, TextMessage&){
+    Node* n = nullptr;
     for(Node& node : m_nodeList){
         if(node.socket == &socket){
             node.socket = nullptr;
+            n = &node;
             break;
         }
     }
     TextMessage tm(QByteArrayLiteral("USER"), getOnlineUserId().toUtf8());
     sendToAllOnlineUser(tm);
+
+    if(n){
+        TextMessage tm("MSGA", QStringLiteral("[ System message ]\n ====== [ %1 ] Exit the chat room ======\n")
+                                   .arg(n->id).toUtf8());
+        sendToAllOnlineUser(tm);
+    }
 }
 
 void ServerHandler::LGIN_Handler(QTcpSocket& socket, TextMessage& message){
@@ -109,6 +117,10 @@ void ServerHandler::LGIN_Handler(QTcpSocket& socket, TextMessage& message){
     if(result == QByteArrayLiteral("LIOK")){
         TextMessage tm(QByteArrayLiteral("USER"), getOnlineUserId().toUtf8());
         sendToAllOnlineUser(tm);
+
+        TextMessage msga("MSGA", QStringLiteral("[ System message ]\n ====== [ %1 ] join the chat room ======\n")
+                                     .arg(id).toUtf8());
+        sendToAllOnlineUser(msga);
     }
 }
 

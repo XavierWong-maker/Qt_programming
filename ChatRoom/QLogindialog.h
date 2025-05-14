@@ -13,10 +13,13 @@ class QLoginDialog : public QDialog
 {
     Q_OBJECT
 
+    using valFunc = bool (*) (QString);
+
     QLabel UserLabel, PwdLabel, CaptLabel, CaptDisplay;
     QLineEdit UserEdit, PwdEdit, CaptEdit;
     QPushButton LoginBtn, CancelBtn;
     QTimer m_timer;
+    valFunc m_vf;
 
     QString m_user, m_pwd, m_captcha;
     Qt::GlobalColor* m_colors;
@@ -38,6 +41,7 @@ public:
     QLoginDialog(QWidget* parent = nullptr);
     QString getUser() const { return m_user; }
     QString getPwd() const { return m_pwd; }
+    void setValFunc(valFunc vf) { m_vf = vf; }
     ~QLoginDialog();
 };
 

@@ -55,6 +55,7 @@ void MainWin::initInputGrpBx(){
 
     inputEdit.setFixedHeight(23);
     inputEdit.setEnabled(false);
+    inputEdit.installEventFilter(this);
     statusLab.setText("Status: Not logged in");
     logInOutBtn.setFixedHeight(30);
     logInOutBtn.setText("login");

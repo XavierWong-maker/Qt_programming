@@ -20,6 +20,23 @@ void MainWin::initMember(){
     };
 }
 
+static bool ValidateUserID(QString id){
+    static const QSet<QChar> invalidChars = []() {
+        QSet<QChar> set;
+        const QString chars = "~`!@#$%^&*()_-+={}[]|\\:;'\",.?/<>";
+        for (QChar ch : chars)
+            set.insert(ch);
+        return set;
+    }();
+
+    for (const QChar& ch : id) {
+        if (invalidChars.contains(ch)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 QString MainWin::getCheckedUserId() const{
     QStringList checkedUsers;
     for(int i = 0; i < listWidget.count(); ++i){
@@ -29,6 +46,17 @@ QString MainWin::getCheckedUserId() const{
         }
     }
     return checkedUsers.join('\r');
+}
+
+bool MainWin::eventFilter(QObject* obj, QEvent* evt) {
+    if(obj == &inputEdit && evt->type() == QEvent::KeyPress){
+        QKeyEvent* ke = static_cast<QKeyEvent*>(evt);
+        if(ke->key() == Qt::Key_Enter){
+            sendBtnClicked();
+            return true;
+        }
+    }
+    return QWidget::eventFilter(obj, evt);
 }
 
 void MainWin::sendBtnClicked(){
@@ -59,6 +87,7 @@ void MainWin::sendBtnClicked(){
 
 void MainWin::logInOutBtnClicked(){
     if(!m_client.isValid()){
+        loginDlg.setValFunc(ValidateUserID);
         if(loginDlg.exec() == QDialog::Accepted){
             const QString user = loginDlg.getUser().trimmed();
             const QString pwd = loginDlg.getPwd();
@@ -134,6 +163,7 @@ void MainWin::LIER_Handler(QTcpSocket&, TextMessage&){
 
 void MainWin::MSGA_Handler(QTcpSocket&, TextMessage& message){
     msgEditor.appendPlainText(message.data());
+    activateWindow();
 }
 
 void MainWin::USER_Handler(QTcpSocket&, TextMessage& message){

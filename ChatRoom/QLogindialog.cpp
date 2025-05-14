@@ -58,10 +58,14 @@ void QLoginDialog::LoginBtn_Clicked(){
     if(m_captcha.toLower() == captcha.toLower()){
         m_user = UserEdit.text().trimmed();
         m_pwd = PwdEdit.text();
-        if(!(m_user.isEmpty() || m_pwd.isEmpty())){
-            done(Accepted);
-        }else {
+        if((m_user.isEmpty() || m_pwd.isEmpty())){
             QMessageBox::information(this, "Info", "User or PassWord can't empty!");
+
+        }else if(m_vf && !m_vf(m_user)){
+            QMessageBox::critical(this, "Error", "Illegal username. Please re-enter!");
+
+        }else {
+            done(Accepted);
         }
 
     }else{
